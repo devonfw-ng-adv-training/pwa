@@ -42,8 +42,20 @@ const subscriptions = function () {
       }
     },
 
-    map(callbackfn) {
-      return currentSubscriptions.map(callbackfn);
+    sendTestMessageToAllSubscribers() {
+      return Promise.all(currentSubscriptions.map(sub => webPush.sendNotification(
+        sub, JSON.stringify({
+          notification: {
+            title: 'Hello PWA User!',
+            body: 'This is a Push Notification!',
+            icon: 'assets/manifest/android-chrome-192x192.png',
+            vibrate: [100, 50, 100],
+            data: {
+              dateOfArrival: Date.now(),
+              primaryKey: 1
+            }
+          }
+        }))));
     }
   };
 }();
@@ -65,20 +77,8 @@ app.delete('/api/subscription/:endpoint', (req, res) => {
 app.use('/api/message', basicAuth({users: {admin: 'secret'}}));
 
 app.post('/api/message', (req, res) => {
-    Promise.all(subscriptions.map(sub => webPush.sendNotification(
-      sub, JSON.stringify({
-        notification: {
-          title: 'Hello PWA User!',
-          body: 'This is a Push Notification!',
-          icon: 'assets/manifest/android-chrome-192x192.png',
-          vibrate: [100, 50, 100],
-          data: {
-            dateOfArrival: Date.now(),
-            primaryKey: 1
-          }
-        }
-      }))))
-      .then(() => res.sendStatus(200))
+  subscriptions.sendTestMessageToAllSubscribers()
+    .then(() => res.sendStatus(200))
       .catch(err => {
         console.error('Error sending notification, reason: ', err);
         res.sendStatus(500);
