@@ -1,6 +1,6 @@
 import * as express from 'express';
 import {readFileSync} from 'fs';
-const fallback = require('express-history-api-fallback');
+import * as fallback from 'express-history-api-fallback';
 
 const app = express();
 
